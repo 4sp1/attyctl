@@ -1,0 +1,4 @@
+github.com/4sp1/must v0.0.0-20260102184627-dc87ce09cffb h1:2CIgbKZw+RSkcePkjpnuUC0aEWnZ2COqhySCMAyETQQ=
+github.com/4sp1/must v0.0.0-20260102184627-dc87ce09cffb/go.mod h1:wRli/Gd22vB4kjnkHE2KlKA2krbgs5GXRGR69RhAPTc=
+github.com/BurntSushi/toml v1.6.0 h1:dRaEfpa2VI55EwlIW72hMRHdWouJeRF7TPYhI+AUQjk=
+github.com/BurntSushi/toml v1.6.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
