@@ -18,6 +18,7 @@ import (
 type config map[string]map[string]any
 
 func main() {
+	setupAlacritty := flag.Bool("alacritty", false, "set up alacritty")
 	setupTerminal := flag.Bool("terminal", true, "set up the native macOS Terminal")
 	setupFlag := flag.Bool("setup", false, "rebuild cache for newly installed fonts")
 	setupJson := flag.String("json", "", "path to export system_profile SPFontsDataType as JSON")
@@ -40,6 +41,8 @@ func main() {
 	}
 
 	switch {
+	case *setupAlacritty:
+		alacritty(*setupFontFamily)
 	case *setupTerminal:
 		mustHandleError(terminal(*setupFontFamily))
 	default:
@@ -125,6 +128,75 @@ func terminal(font string) error {
 	return cmd.Run()
 }
 
+func alacritty(font string) {
+	home := mustHaveString(os.UserHomeDir())
+	file := path.Join(home, ".config", "alacritty", "alacritty.toml")
+
+	if _, err := os.Stat(file); err != nil {
+		if os.IsNotExist(err) {
+			mustHandleError(os.MkdirAll(path.Dir(file), 0700))
+			f := mustHaveFile(os.Create(file))
+			defer mustHandle(f.Close)
+			config := config{
+				"font": map[string]any{
+					"size": 14.0,
+					"normal": map[string]string{
+						"family": font,
+					},
+				},
+			}
+			encoder := toml.NewEncoder(f)
+			encoder.Indent = ""
+			mustHandleError(encoder.Encode(config))
+			return
+		}
+		mustHandleError(err)
+		return
+	}
+
+	f := mustHaveFile(os.Open(file))
+	defer mustHandle(f.Close)
+
+	old := path.Join(path.Dir(file), "alacritty.toml.old")
+	c := mustHaveFile(os.Create(old))
+	defer mustHandle(c.Close)
+
+	tee := io.TeeReader(f, c)
+
+	var config config
+	mustHandle(func() error {
+		_, err := toml.NewDecoder(tee).Decode(&config)
+		return err
+	})
+
+	for k, v := range config {
+		fmt.Println("k", k)
+		for k, v := range v {
+			fmt.Println(">", k, "=", v)
+		}
+	}
+
+	_, ok := config["font"]
+	if ok {
+		config["font"]["normal"] = map[string]string{"family": font}
+	} else {
+		config["font"] = map[string]any{
+			"size": 14.0,
+			"normal": map[string]string{
+				"family": font,
+			},
+		}
+	}
+
+	mustHandle(f.Close)
+
+	f = mustHaveFile(os.Create(file))
+
+	encoder := toml.NewEncoder(f)
+	encoder.Indent = ""
+	mustHandleError(encoder.Encode(config))
+
+}
 
 type spFontsDataTypeObjectJSON struct {
 	SPFontsDataType []spFontsDataTypeJSON
