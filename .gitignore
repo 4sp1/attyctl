@@ -1,2 +1,4 @@
 attyctl
 {payload,response}.json
+.prepare.yaml
+.prompt
